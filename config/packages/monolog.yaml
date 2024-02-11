@@ -1,0 +1,47 @@
+monolog:
+    channels:
+        - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - command
+        - mailer
+
+when@dev:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+                channels: ["!event"]
+            command:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.command.log"
+                level: error
+                channels: ["command"]
+            mailer:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.mailer.log"
+                level: error
+                channels: [ "mailer" ]
+
+when@prod:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: critical
+                channels: ["!event"]
+            command:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.command.log"
+                level: error
+                channels: ["command"]
+            mailer:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.mailer.log"
+                level: error
+                channels: [ "mailer" ]
+            deprecation:
+                type: stream
+                channels: [deprecation]
+                path: php://stderr

@@ -1,0 +1,47 @@
+   #!/usr/bin/env bash
+set -e
+
+ENTRY_CONTAINER="php"
+COMPOSE_FILES="--project-directory . -f setup/docker-compose.yml"
+
+function cmd_build() {
+  docker-compose ${COMPOSE_FILES} build
+}
+
+function cmd_start() {
+  echo "Start Docker containers"
+  docker-compose ${COMPOSE_FILES} up -d
+
+  echo "Install dependencies"
+  docker-compose ${COMPOSE_FILES} exec -T ${ENTRY_CONTAINER} sh -c 'composer self-update && composer install --no-scripts --no-interaction'
+
+  echo "Update database schema"
+  docker-compose ${COMPOSE_FILES} exec -T ${ENTRY_CONTAINER} sh -c './bin/console doctrine:schema:update --force --complete'
+
+  echo "Sync metadata storage"
+  docker-compose ${COMPOSE_FILES} exec -T ${ENTRY_CONTAINER} sh -c './bin/console doctrine:migrations:sync-metadata-storage'
+
+  echo "Add existing migrations to database"
+  docker-compose ${COMPOSE_FILES} exec -T ${ENTRY_CONTAINER} sh -c './bin/console doctrine:migrations:version --add --all'
+}
+
+function cmd_stop() {
+  echo -e "Stop Docker containers"
+
+  docker-compose ${COMPOSE_FILES} down
+}
+
+COMMAND=$1
+[[ -z $COMMAND ]] || shift
+
+# -----------------------------------------------------------------------------
+# Run commands
+# -----------------------------------------------------------------------------
+
+if [[ ${COMMAND} == "build" ]]; then
+  cmd_build
+elif [[ ${COMMAND} == "start" ]]; then
+  cmd_start "$@"
+elif [[ ${COMMAND} == "stop" ]]; then
+  cmd_stop
+fi
