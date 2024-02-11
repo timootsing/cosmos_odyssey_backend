@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\DTO\Request\BookingDTO;
 use App\DTO\Response\PlanetDTO;
+use App\Factory\BookingBuilder;
+use App\Map\BookingResponseMap;
 use App\Map\PlanetResponseMap;
-use App\Repository\PlanetRepository;
+use App\Repository\BookingRepository;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\Post;
@@ -17,7 +19,8 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 class BookingController extends AbstractFOSRestController
 {
     public function __construct(
-        private readonly PlanetRepository $planetRepository,
+        private readonly BookingRepository $bookingRepository,
+        private readonly BookingBuilder $bookingBuilder,
     )
     {
     }
@@ -25,9 +28,9 @@ class BookingController extends AbstractFOSRestController
     #[Get(path: '/')]
     public function getBookings(): JsonResponse
     {
-        $planets = $this->planetRepository->findAll();
-        $mappedPlanets = array_map(fn($planet): PlanetDTO => PlanetResponseMap::mapEntityToDTO($planet), $planets);
-        return $this->json($mappedPlanets);
+        $bookings = $this->bookingRepository->findAll();
+        $mappedBookings = array_map(fn($booking): \App\DTO\Response\BookingDTO => BookingResponseMap::mapEntityToDTO($booking), $bookings);
+        return $this->json($mappedBookings);
     }
 
     #[Post(path: '/')]
@@ -35,8 +38,8 @@ class BookingController extends AbstractFOSRestController
         #[MapRequestPayload] BookingDTO $bookingDTO,
     ): JsonResponse
     {
-        // TODO: builder? Reposse create?
-        return $this->json($mappedPlanets);
+        $booking = $this->bookingBuilder->createBooking($bookingDTO);
+        return $this->json($booking);
     }
 
 }

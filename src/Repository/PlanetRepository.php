@@ -53,24 +53,4 @@ class PlanetRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-    /**
-     * @param int $limit
-     * @param int $page
-     * @return array
-     */
-    /*public function findByPagination(int $limit, int $page): array
-    {
-        $query = $this->createQueryBuilder('mp')
-            ->orderBy('mp.occurredAt', 'DESC');
-
-        $offset = ($page - 1) * $limit;
-        $query
-            ->setMaxResults($limit)
-            ->setFirstResult($offset);
-
-        return $query
-            ->getQuery()
-            ->getResult();
-    }*/
-
 }
