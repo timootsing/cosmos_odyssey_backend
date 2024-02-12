@@ -12,13 +12,13 @@ class BookingDTO
 
     private string $lastName;
 
-    private Route $route;
+    private RouteDTO $route;
 
     public function __construct(
         int $id,
         string $firstName,
         string $lastName,
-        Route $route,
+        RouteDTO $route,
     )
     {
         $this->id = $id;
@@ -43,7 +43,7 @@ class BookingDTO
         return $this->firstName;
     }
 
-    public function getRoute(): Route
+    public function getRoute(): RouteDTO
     {
         return $this->route;
     }

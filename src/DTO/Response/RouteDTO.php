@@ -41,7 +41,7 @@ class RouteDTO
         $this->flightsInRoute = $flightsInRoute;
     }
 
-    public function getId(): string
+    public function getId(): int
     {
         return $this->id;
     }

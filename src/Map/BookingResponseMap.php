@@ -17,7 +17,7 @@ class BookingResponseMap
             $booking->getId(),
             $booking->getFirstName(),
             $booking->getLastName(),
-            $booking->getRoute(),
+            RouteResponseMap::mapEntityToDTO($booking->getRoute()),
         );
     }
 

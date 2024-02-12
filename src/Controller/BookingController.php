@@ -3,11 +3,12 @@
 namespace App\Controller;
 
 use App\DTO\Request\BookingDTO;
-use App\DTO\Response\PlanetDTO;
 use App\Factory\BookingBuilder;
 use App\Map\BookingResponseMap;
-use App\Map\PlanetResponseMap;
 use App\Repository\BookingRepository;
+use App\Repository\PriceListRepository;
+use App\Repository\RouteRepository;
+use Doctrine\ORM\NonUniqueResultException;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\Post;
@@ -20,6 +21,8 @@ class BookingController extends AbstractFOSRestController
 {
     public function __construct(
         private readonly BookingRepository $bookingRepository,
+        private readonly PriceListRepository $priceListRepository,
+        private readonly RouteRepository $routeRepository,
         private readonly BookingBuilder $bookingBuilder,
     )
     {
@@ -38,8 +41,18 @@ class BookingController extends AbstractFOSRestController
         #[MapRequestPayload] BookingDTO $bookingDTO,
     ): JsonResponse
     {
-        $booking = $this->bookingBuilder->createBooking($bookingDTO);
-        return $this->json($booking);
+        try {
+            $latestPriceList = $this->priceListRepository->findLatestPriceList();
+            $route = $this->routeRepository->find($bookingDTO->getRouteId());
+            if ($latestPriceList === $route->getPriceList()) {
+                $booking = $this->bookingBuilder->createBooking($bookingDTO);
+                return $this->json(BookingResponseMap::mapEntityToDTO($booking));
+            }
+
+            return $this->json(['error' => 'The price list has expired. Please reload the page and try again.']);
+        } catch (NonUniqueResultException $e) {
+            return $this->json(['error' => 'Something went wrong']);
+        }
     }
 
 }

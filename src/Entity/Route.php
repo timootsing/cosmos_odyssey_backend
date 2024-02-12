@@ -7,7 +7,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-// TODO: travel time puudu
 #[ORM\Entity]
 class Route //SELECT TIMESTAMPDIFF(SECOND, '2012-06-06 13:13:55', '2022-06-06 15:20:18')
 {
@@ -45,8 +44,6 @@ class Route //SELECT TIMESTAMPDIFF(SECOND, '2012-06-06 13:13:55', '2022-06-06 15
 
     #[ORM\Column(name: 'end_at', type: 'datetime', nullable: true)]
     private ?DateTimeInterface $endAt = null;
-
-
 
     public function __construct()
     {
