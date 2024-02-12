@@ -44,7 +44,7 @@ class FetchPriceList extends Command
 
         $priceList = $this->priceListRepository->findOneBy(['validUntil' => $responseValidUntil]);
         if ($priceList !== null) {
-            // return Command::SUCCESS; //TODO UNCOMMENT
+            return Command::SUCCESS;
         }
 
         $priceList = $this->priceListBuilder->createPriceList($response);
