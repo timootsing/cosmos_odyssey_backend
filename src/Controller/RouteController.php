@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Paginator\RoutePaginator;
+use App\Repository\PriceListRepository;
 use App\Repository\RouteRepository;
+use Doctrine\ORM\NonUniqueResultException;
 use FOS\RestBundle\Controller\Annotations\Get;
 use FOS\RestBundle\Controller\Annotations\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,6 +19,7 @@ class RouteController extends AbstractController
 
     public function __construct(
         private readonly RouteRepository $routeRepository,
+        private readonly PriceListRepository $priceListRepository,
         private readonly RoutePaginator $routePaginator,
     )
     {
@@ -31,16 +34,24 @@ class RouteController extends AbstractController
         #[MapQueryParameter] string $sortBy = 'price',
         #[MapQueryParameter] string $sortOrder = 'ASC',
     ): JsonResponse {
-        $routes = $this->routeRepository->getQuery(
-            $originId,
-            $destinationId,
-            $providerId,
-            $sortBy,
-            $sortOrder
-        );
+        try {
+            $priceList = $this->priceListRepository->findLatestPriceList();
+            if ($priceList === null) {
+                return $this->json([]);
+            }
+            $routes = $this->routeRepository->getQuery(
+                $originId,
+                $destinationId,
+                $providerId,
+                $sortBy,
+                $sortOrder,
+                $priceList,
+            );
 
-        $response = $this->routePaginator->paginate($routes, $page);
-
-        return $this->json($response);
+            $response = $this->routePaginator->paginate($routes, $page);
+            return $this->json($response);
+        } catch (NonUniqueResultException $e) {
+            return $this->json([]);
+        }
     }
 }

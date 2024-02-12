@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\PriceList;
 use App\Entity\Route;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\Query;
@@ -46,12 +47,15 @@ class RouteRepository extends ServiceEntityRepository
         ?int $providerId,
         string $sortBy,
         string $sortOrder,
+        PriceList $priceList,
     ): Query {
         $query = $this->createQueryBuilder('r')
             ->where('r.origin = :originId')
             ->andWhere('r.destination = :destinationId')
+            ->andWhere('r.priceList = :priceListId')
             ->setParameter('originId', $originId)
-            ->setParameter('destinationId', $destinationId);;
+            ->setParameter('destinationId', $destinationId)
+            ->setParameter('priceListId', $priceList);
 
         if ($providerId !== null) {
             $query
