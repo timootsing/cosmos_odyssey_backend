@@ -9,7 +9,6 @@ use App\Entity\PriceList;
 use App\Entity\Route;
 use App\Repository\LegRepository;
 use App\Repository\PlanetRepository;
-use App\Repository\RouteRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -18,7 +17,6 @@ class RouteService
     public function __construct(
         private readonly PlanetRepository           $planetRepository,
         private readonly LegRepository              $legRepository,
-        private readonly RouteRepository            $routeRepository,
         private readonly EntityManagerInterface     $entityManager,
     )
     {
@@ -26,7 +24,6 @@ class RouteService
 
     public function createRoutesForPriceList(PriceList $priceList): void
     {
-        $start = microtime(true);
         $validPaths = $this->generatePaths($priceList);
         foreach ($validPaths as $path) {
             $validRoutes = [];
@@ -48,8 +45,6 @@ class RouteService
         }
 
         $this->entityManager->flush();
-        $timeElapsed = microtime(true) - $start;
-        echo "$timeElapsed seconds to create routes";
     }
 
     private function generatePaths(PriceList $priceList): array
@@ -95,7 +90,6 @@ class RouteService
 
     private function findValidRoutesRecursive(array $path, PriceList $currentPriceList, array $selectedFlights, array &$validRoutes): void
     {
-        // Base case: If we have reached the end of the path, add the selected flights to the valid routes array
         if (count($selectedFlights) === count($path)) {
             $validRoutes[] = $selectedFlights;
             return;
@@ -110,7 +104,6 @@ class RouteService
             if ($this->isFlightValidForLeg($flight, $selectedFlights)) {
                 $selectedFlights[] = $flight;
                 $this->findValidRoutesRecursive($path, $currentPriceList, $selectedFlights, $validRoutes);
-                // Remove the last selected flight for backtracking
                 array_pop($selectedFlights);
             }
         }
@@ -127,7 +120,6 @@ class RouteService
         $previousFlightArrivalTime = $previousFlight->getEndAt();
         $currentFlightDepartureTime = $flight->getStartAt();
 
-        // Ensure that the departure time of the current flight is after the arrival time of the previous flight
         if ($currentFlightDepartureTime > $previousFlightArrivalTime) {
             return true;
         }
