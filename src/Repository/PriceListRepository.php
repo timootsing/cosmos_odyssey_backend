@@ -21,7 +21,6 @@ class PriceListRepository extends ServiceEntityRepository
 {
     public function __construct(
         ManagerRegistry $registry,
-        private readonly LoggerInterface $logger
     )
     {
         parent::__construct($registry, PriceList::class);
@@ -59,32 +58,25 @@ class PriceListRepository extends ServiceEntityRepository
 
     public function deleteExceedingPriceLists(): void
     {
-        try {
-            $totalPriceLists = $this->createQueryBuilder('pl')
-                ->select('COUNT(pl.id)')
+        $totalPriceLists = $this->createQueryBuilder('pl')
+            ->select('COUNT(pl.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        if ($totalPriceLists > 15) {
+            $priceListsToDelete = $this->createQueryBuilder('pl')
+                ->orderBy('pl.validUntil', 'ASC')
+                ->setMaxResults($totalPriceLists - 15)
                 ->getQuery()
-                ->getSingleScalarResult();
+                ->getResult();
 
-            if ($totalPriceLists > 15) {
-                $priceListsToDelete = $this->createQueryBuilder('pl')
-                    ->orderBy('pl.validUntil', 'ASC')
-                    ->setMaxResults($totalPriceLists - 15)
-                    ->getQuery()
-                    ->getResult();
+            $entityManager = $this->getEntityManager();
 
-                $entityManager = $this->getEntityManager();
-
-                foreach ($priceListsToDelete as $priceList) {
-                    $entityManager->remove($priceList);
-                }
-
-                $entityManager->flush();
+            foreach ($priceListsToDelete as $priceList) {
+                $entityManager->remove($priceList);
             }
-        } catch (Throwable $exception) {
-            $this->logger->error('An error occurred while deleting expired Travel Prices', [
-                'exception' => get_class($exception),
-                'message' => $exception->getMessage()
-            ]);
+
+            $entityManager->flush();
         }
     }
 

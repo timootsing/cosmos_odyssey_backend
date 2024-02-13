@@ -35,43 +35,42 @@ class FetchPriceList extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $response = $this->fetchPriceList();
-        if ($response === null) {
-            return Command::FAILURE;
-        }
-
-        $responseValidUntil = new DateTimeImmutable($response['validUntil']);
-
-        $priceList = $this->priceListRepository->findOneBy(['validUntil' => $responseValidUntil]);
-        if ($priceList !== null) {
-            return Command::SUCCESS;
-        }
-
-        $priceList = $this->priceListBuilder->createPriceList($response);
-        $this->routeService->createRoutesForPriceList($priceList);
-
-        $this->priceListRepository->deleteExceedingPriceLists();
-
-        return Command::SUCCESS;
-    }
-
-    private function fetchPriceList(): ?array
-    {
         try {
-            $response = $this->client->request(
-                'GET',
-                'https://cosmos-odyssey.azurewebsites.net/api/v1.0/TravelPrices'
-            );
+            $response = $this->fetchPriceList();
+            if ($response === null) {
+                return Command::FAILURE;
+            }
 
-            return json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $responseValidUntil = new DateTimeImmutable($response['validUntil']);
+
+            $priceList = $this->priceListRepository->findOneBy(['validUntil' => $responseValidUntil]);
+            if ($priceList !== null) {
+                return Command::SUCCESS;
+            }
+
+            $priceList = $this->priceListBuilder->createPriceList($response);
+            $this->routeService->createRoutesForPriceList($priceList);
+
+            $this->priceListRepository->deleteExceedingPriceLists();
+
+            return Command::SUCCESS;
         } catch (Throwable $exception) {
             $this->logger->error('An error occurred while fetching Travel Prices', [
                 'exception' => get_class($exception),
                 'message' => $exception->getMessage()
             ]);
+            return Command::FAILURE;
         }
+    }
 
-        return null;
+    private function fetchPriceList(): ?array
+    {
+        $response = $this->client->request(
+            'GET',
+            'https://cosmos-odyssey.azurewebsites.net/api/v1.0/TravelPrices'
+        );
+
+        return json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
     }
 
 }
